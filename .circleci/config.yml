@@ -1,0 +1,19 @@
+version: 2
+jobs:
+  build:
+    docker:
+    - image: dyoshikawa/php:latest
+    - image: circleci/mysql:5.7
+
+    steps:
+    - checkout
+    - run: composer install
+    - run: composer report
+    - run: cp .env.circleci .env
+    - run: php artisan key:generate
+    - run: php artisan jwt:secret
+    - run:
+        name: Wait for db
+        command: dockerize -wait tcp://localhost:3306 -timeout 1m
+    - run: php artisan migrate
+    - run: ./vendor/bin/phpunit
